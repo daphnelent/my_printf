@@ -11,6 +11,9 @@ void print_hex(int num);
 // will use the following function to print strings for %s
 void print_str(const char* str);
 
+// will use the following function to help parse the string
+const char* parsed_string(const char* format, va_list args);
+
 
 void my_printf(const char* format, ...) {
     // va_list will have the variable arguments
@@ -32,7 +35,7 @@ void my_printf(const char* format, ...) {
 
             // if its not, then check what type it is and apply modifiers
             else {
-                // put more difficult print stuff here
+                format = parsed_string(format, args);
             }
 
         }
@@ -41,33 +44,13 @@ void my_printf(const char* format, ...) {
         }
     }
     // end the variable arguments because done using them
-    va_end(args)
+    va_end(args);
 }
 
-// format specifier syntax %[parameter][flags][width][.precision][length]type
-    // parameter:
-        // n$ (specifies index, because given parameters not sequential)
-    // flags: (in order of can be overwritten to cant be)
-        // # 0x added for hex
-        // 0 (when width specified prepend 0s instead of spaces)
-        // - (left align)
-        // space (print space for pos nums)
-        // + (print plus for pos nums)
-        // ' (apply thousands grouping to decimals)
-    // width
-        // minimum num of chars- never truncated just if val is less, left pad w spaces
-        // if * is width, read from parameters
-    // length 
-        // interpret the var thats on the stack as this type
-    // type
-        // % - prints %, no other parameters accepted
-        // d- print an int
-        // x- unsigned int as hex number in lower case letters
-        // c- char
-        // s- null-terminated string
 
 
-    // implement 3 new things printf should do (1. switch to lowercase, 2. switch to uppercase, 3. switch to binary)
+
+// implement 3 new things printf should do (1. switch to lowercase, 2. switch to uppercase, 3. switch to binary)
 
 
 
@@ -123,11 +106,118 @@ void print_hex(int num) {
     
 }
 
-void print_str(const char* str) {
-    // for each char in the str, output it
-    for (int i = 0; str[i] != '\0'; i++) {
-        putchar(str[i]);
+const char* parsed_string(const char* format, va_list args) {
+    int parameter = 0;
+    int width = 0; 
+    int width_param = 0;
+    int zero_padding = 0;
+    int left_align = 0;
+    int show_sign = 0; 
+    int hashtag = 0;
+    int space_sign = 0;
+    char length = '\0';
+    char type = '\0';
+    int precision = 0;
+
+    // first check for parameter index
+    // if we have a digit (might be parameter if followed by $)
+    while (*format >= '0' && *format <= '9'){
+        parameter *= 10;
+        parameter += (*format - '0');
+        format++;
     }
+    if (*format == "$") {
+        format ++;
+        }
+    // if there is no $ following the number, then it must've been the width or zero flag, there is no parameter
+    else {
+        if (parameter == 0) {
+            zero_padding = '0';
+        }
+        else {
+            width = parameter;
+            parameter = 0;
+        }
+    }
+
+    // now we move to parse out the flags
+    while (*format == '#' || *format == 0 || *format == '-' || *format == ' ' || *format == '+') {
+        if (*format == '#') {
+            hashtag = 1;
+        }
+        else if (*format == 0) {
+            zero_padding = 1;
+        }
+        else if (*format == '-'){
+            left_align = 1;
+        }
+        else if (*format == ' '){
+            if (!show_sign) {
+                space_sign = 1;
+            }
+        }
+        else if (*format == '+') {
+            show_sign = 1;
+            space_sign = 0;
+        }
+        format++;
+    }
+
+    // now move to handling width
+    if (*format == '*') {
+        // check for index parameter for non sequential arguments
+        while (*format >= '0' && *format <= '9'){
+            width_param *= 10;
+            width_param += (*format - '0');
+            format++;
+        }
+        // if no parameter number given for width, means just sequential from argumets. mark width as -1 to show must get from parameter
+        width = -1;
+    }
+    else {
+        while (*format >= '0' && *format <= '9') {
+                width = width * 10 + (*format - '0');
+                format++;
+            }
+    }
+    // now handle precision
+    if (*format == '.') {
+        format++;
+        while (*format >= '0' && *format <= '9') {
+                precision = precision * 10 + (*format - '0');
+                format++;
+        }
+
+    // now move to handling length
+    if (*format == 'h' || *format == 'l') {
+            length = *format;  
+            format++; 
+        }
+
+    // now move to handling type
+    type = *format;
+    if (type == '\0') return format;  // Incomplete
+
+    format++;
+
 }
+    // flags: (in order of can be overwritten to cant be)
+        // # 0x added for hex
+        // 0 (when width specified prepend 0s instead of spaces)
+        // - (left align)
+        // space (print space for pos nums)
+        // + (print plus for pos nums)
+    // width
+        // minimum num of chars- never truncated just if val is less, left pad w spaces
+        // if * is width, read from parameters
+    // length 
+        // interpret the var thats on the stack as this type
+    // type
+        // % - prints %, no other parameters accepted
+        // d- print an int
+        // x- unsigned int as hex number in lower case letters
+        // c- char
+        // s- null-terminated string
+
 
 // write test functions and put in ada
