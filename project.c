@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 // will use the following function to print integers for %d as putchar expects char values
 void print_int(int num);
@@ -10,7 +11,38 @@ void print_hex(int num);
 // will use the following function to print strings for %s
 void print_str(const char* str);
 
-// use putchar()
+
+void my_printf(const char* format, ...) {
+    // va_list will have the variable arguments
+    va_list args;
+    // va_start initializes the va_list of argumets for use, format is last param before the elipses
+    va_start(args, format);
+
+    // loop through the format string
+    while (*format != '\0') {
+
+        // if we encounter a % that we need to format properly
+        if (*format == '%') {
+            format++;
+
+            // check if it is another %, because %% just prints %
+            if (*format == '%') {
+                putchar('%');
+            }
+
+            // if its not, then check what type it is and apply modifiers
+            else {
+                // put more difficult print stuff here
+            }
+
+        }
+        else {
+            putchar(*format);
+        }
+    }
+    // end the variable arguments because done using them
+    va_end(args)
+}
 
 // format specifier syntax %[parameter][flags][width][.precision][length]type
     // parameter:
