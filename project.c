@@ -12,10 +12,13 @@ void print_int(int num);
 int width_int(int num);
 
 // will use the following function to print hex numbers for %x accounting for all the modifiers
-void print_formatted_hex(num, width, zero_padding, precision, left_align, hashtag);
+void print_formatted_hex(int num, int width, int zero_padding, int precision, int left_align, int hashtag);
 
 // get the width of the hex so know how much padding needed 
 int width_hex(unsigned int num);
+
+// print the str with all its formattimg
+void print_formatted_str(const char* str, int width, int precision, int left_align, int zero_padding);
 
 // will use the following function to print strings for %s
 void print_str(const char* str, int precision);
@@ -98,6 +101,16 @@ int width_hex(unsigned int num){
             }
         return 1 + width_hex(num / 16);
     }
+}
+
+// returns number of charecters in the given string
+int width_str(const char *str) {
+    int chars = 0;
+    while (*str != '\0'){
+        chars++;
+        str++;
+    }
+    return chars;
 }
 
 // pad the output to get to the desired width
@@ -255,6 +268,34 @@ void print_formatted_hex(num, width, zero_padding, precision, left_align, hashta
     }
 }
 
+void print_formatted_str(const char* str, int width, int precision, int left_align, int zero_padding){
+    // get the num of chars in the string
+        int numChars = width_str(str);
+
+        // reduce the number of chars to be the precision
+        if (numChars > precision && precision >= 0){
+            numChars = precision;
+        }
+
+        if (left_align == 0){
+            pad_output(numChars, width, zero_padding);
+        }
+
+        print_str(str, precision);
+
+        if (left_align == 1){
+            pad_output(numChars, width, zero_padding);
+        }
+}
+
+void print_str(const char* str, int numChars) {
+    while (numChars > 0){
+        putchar(*str);
+        str++;
+        numChars--;
+    }
+}
+
 
 
 const char* parsed_string(const char* format, va_list args) {
@@ -403,7 +444,15 @@ const char* parsed_string(const char* format, va_list args) {
     }
 
     else if (type == 's'){
-        // handle str
+        // ensure zero padding flag not set
+        zero_padding = 0;
+
+        // create a pointer to the string
+        const char *str = va_arg(args, char*); 
+
+        print_formatted_str(str, width, precision, left_align, zero_padding);
+
+
     }
     // if not a valid type, throw an error
     else {
