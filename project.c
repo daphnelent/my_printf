@@ -77,7 +77,7 @@ void my_printf(const char* format, ...) {
     // end the variable arguments because done using them
     va_end(args);
 
-    // should return number of chars printed excluding null "\0" to end output
+    return chars_printed;
 
 }
 
