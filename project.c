@@ -299,9 +299,7 @@ void print_str(const char* str, int numChars) {
 
 
 const char* parsed_string(const char* format, va_list args) {
-    int parameter = 0;
     int width = 0; 
-    int width_param = 0;
     int zero_padding = 0;
     int left_align = 0;
     int show_sign = 0; 
@@ -311,33 +309,12 @@ const char* parsed_string(const char* format, va_list args) {
     char type = '\0';
     int precision = -1;
 
-    // first check for parameter index
-    // if we have a digit (might be parameter if followed by $)
-    while (*format >= '0' && *format <= '9'){
-        parameter *= 10;
-        parameter += (*format - '0');
-        format++;
-    }
-    if (*format == "$") {
-        format ++;
-        }
-    // if there is no $ following the number, then it must've been the width or zero flag, there is no parameter
-    else {
-        if (parameter == 0) {
-            zero_padding = '1';
-        }
-        else {
-            width = parameter;
-            parameter = 0;
-        }
-    }
-
     // now we move to parse out the flags
-    while (*format == '#' || *format == 0 || *format == '-' || *format == ' ' || *format == '+') {
+    while (*format == '#' || *format == '0' || *format == '-' || *format == ' ' || *format == '+') {
         if (*format == '#') {
             hashtag = 1;
         }
-        else if (*format == 0) {
+        else if (*format == '0') {
             zero_padding = 1;
         }
         else if (*format == '-'){
@@ -359,14 +336,7 @@ const char* parsed_string(const char* format, va_list args) {
 
     // now move to handling width
     if (*format == '*') {
-        // check for index parameter for non sequential arguments
-        while (*format >= '0' && *format <= '9'){
-            width_param *= 10;
-            width_param += (*format - '0');
-            format++;
-        }
-        // if no parameter number given for width, means just sequential from argumets. mark width as -1 to show must get from parameter
-        width = -1;
+        width = va_arg(args, int);
     }
     else {
         while (*format >= '0' && *format <= '9') {
