@@ -4,36 +4,38 @@
 
 
 // will use the following function to print integers for %d accounting for all the modifiers
-void print_formatted_int(int num, int width, int zero_padding, int precision, int left_align, int show_sign, int space_sign);
+void print_formatted_int(int num, int width, int zero_padding, int precision, int left_align, int show_sign, int space_sign, int *chars_printed);
 // prints the actual number
-void print_int(int num);
+void print_int(int num, int *chars_printed);
 
 // get the width of the number so know how much padding needed 
 int width_int(int num);
 
 // will use the following function to print hex numbers for %x accounting for all the modifiers
-void print_formatted_hex(int num, int width, int zero_padding, int precision, int left_align, int hashtag);
+void print_formatted_hex(int num, int width, int zero_padding, int precision, int left_align, int hashtag, int *chars_printed);
 
 // get the width of the hex so know how much padding needed 
 int width_hex(unsigned int num);
 
 // print the str with all its formattimg
-void print_formatted_str(const char* str, int width, int precision, int left_align, int zero_padding);
+void print_formatted_str(const char* str, int width, int precision, int left_align, int zero_padding, int *chars_printed);
 
 // will use the following function to print strings for %s
-void print_str(const char* str, int precision);
+void print_str(const char* str, int precision, int *chars_printed);
 
 // get the width of the str so know how much padding needed 
 int width_str(const char* str);
 
 // pad the formatted string to required width
-void pad_output(int totalWidth, int width, int zero_padding);
+void pad_output(int totalWidth, int width, int zero_padding, int *chars_printed);
 
 // will use the following function to help parse the string
-const char* parsed_string(const char* format, va_list args);
+const char* parsed_string(const char* format, va_list args, int *chars_printed);
 
 
 void my_printf(const char* format, ...) {
+
+    int chars_printed = 0;
     // va_list will have the variable arguments, and copy will as well so we can count and store
     va_list args, args_copy;
     // va_start initializes the va_list of argumets for use, format is last param before the elipses
@@ -54,16 +56,21 @@ void my_printf(const char* format, ...) {
             // check if it is another %, because %% just prints %
             if (*format == '%') {
                 putchar('%');
+                chars_printed++;
             }
 
             // if its not, then check what type it is and apply modifiers
             else {
-                format = parsed_string(format, args);
+                format = parsed_string(format, args, &chars_printed);
+                if (format == -1){
+                    return -1;
+                }
             }
 
         }
         else {
             putchar(*format);
+            chars_printed++;
         }
         format++;
     }
@@ -114,7 +121,7 @@ int width_str(const char *str) {
 }
 
 // pad the output to get to the desired width
-void pad_output(int totalWidth, int width, int zero_padding){
+void pad_output(int totalWidth, int width, int zero_padding, int *chars_printed){
     char pad = ' ';
     // if we need more charecters to meet the minimum width
     if (totalWidth < width){
@@ -125,12 +132,13 @@ void pad_output(int totalWidth, int width, int zero_padding){
         // print the padding
         for (int i = width; i > totalWidth; i--) {
             putchar(pad);
+            (*chars_printed)++;
         }
     
     }
 }
 
-void print_formatted_int(int num, int width, int zero_padding, int precision, int left_align, int show_sign, int space_sign){
+void print_formatted_int(int num, int width, int zero_padding, int precision, int left_align, int show_sign, int space_sign, int *chars_printed){
     // get the number of digit charecters in out number
     int digits = width_int(num);
     int totalWidth;
@@ -151,13 +159,14 @@ void print_formatted_int(int num, int width, int zero_padding, int precision, in
 
     // if the left align flag is not set, insert the padding
     if (left_align == 0){
-        pad_output(totalWidth, width, zero_padding);
+        pad_output(totalWidth, width, zero_padding, &chars_printed);
     }
     
     // for negatives
     if (num < 0) {
         // prepend negative sign
         putchar('-');
+        (*chars_printed)++;
         // convert to positive to get numbers
         num = -num;
     }
@@ -165,40 +174,44 @@ void print_formatted_int(int num, int width, int zero_padding, int precision, in
     else {
         if (show_sign == 1){
             putchar('+');
+            (*chars_printed)++;
         }
         else if (space_sign == 1) {
             putchar(' ');
+            (*chars_printed)++;
         }
     }
 
     // add necessary digits to get to minimum as dictated by precision flag
     while (precision > 0){
         putchar('0');
+        (*chars_printed)++;
         precision--;
     }
 
     // print the actual number
-    print_int(num);
+    print_int(num, &chars_printed);
 
     // if left align flag is set, insert padding here
     if (left_align == 1){
-        pad_output(totalWidth, width, zero_padding);
+        pad_output(totalWidth, width, zero_padding, &chars_printed);
     }
 
 }
 
-void print_int(int num) {
+void print_int(int num, int *chars_printed) {
 
     // if the number is more than 1 digit, print the largest place digits first
     if (num / 10) {
-        print_int(num / 10);
+        print_int(num / 10, &chars_printed);
     }
 
     // print the last digit (due to recursion this will print each digit)
     putchar((num % 10 + '0'));
+    (*chars_printed)++;
 }
 
-void print_formatted_hex(num, width, zero_padding, precision, left_align, hashtag){
+void print_formatted_hex(int num, int width, int zero_padding, int precision, int left_align, int hashtag, int *chars_printed){
     // these conditions undo zero padding in printf
     if (precision >= 0) zero_padding = 0;
     if (left_align == 1) zero_padding = 0;
@@ -230,23 +243,25 @@ void print_formatted_hex(num, width, zero_padding, precision, left_align, hashta
 
     // insert spaces padding in output
     if (left_align == 0 && zero_padding == 0){
-        pad_output(totalWidth, width, zero_padding);
+        pad_output(totalWidth, width, zero_padding, &chars_printed);
     }
 
     // account for # flag
     if (hashtag == 1){
         putchar('0');
         putchar('x');
+        (*chars_printed) += 2;
     }
 
     // insert zeros padding in output
     if (left_align == 0 && zero_padding == 1){
-        pad_output(totalWidth, width, zero_padding);
+        pad_output(totalWidth, width, zero_padding, &chars_printed);
     }
 
     // account for precision digit requirements
     while (precision > 0){
         putchar('0');
+        (*chars_printed)++;
         precision--;
     }
     
@@ -260,15 +275,17 @@ void print_formatted_hex(num, width, zero_padding, precision, left_align, hashta
     // print the chars
     for (int hexChar = 0; hexString[hexChar] != '\0'; hexChar++){
         putchar(hexString[hexChar]);
+        (*chars_printed)++;
 
     }
 
     if (left_align == 1){
-        pad_output(totalWidth, width, zero_padding);
+        pad_output(totalWidth, width, zero_padding, &chars_printed);
+        (*chars_printed)++;
     }
 }
 
-void print_formatted_str(const char* str, int width, int precision, int left_align, int zero_padding){
+void print_formatted_str(const char* str, int width, int precision, int left_align, int zero_padding, int *chars_printed){
     // get the num of chars in the string
         int numChars = width_str(str);
 
@@ -278,27 +295,28 @@ void print_formatted_str(const char* str, int width, int precision, int left_ali
         }
 
         if (left_align == 0){
-            pad_output(numChars, width, zero_padding);
+            pad_output(numChars, width, zero_padding, &chars_printed);
         }
 
-        print_str(str, precision);
+        print_str(str, precision, &chars_printed);
 
         if (left_align == 1){
-            pad_output(numChars, width, zero_padding);
+            pad_output(numChars, width, zero_padding, &chars_printed);
         }
 }
 
-void print_str(const char* str, int numChars) {
+void print_str(const char* str, int numChars, int *chars_printed) {
     while (numChars > 0){
         putchar(*str);
         str++;
         numChars--;
+        (*chars_printed)++;
     }
 }
 
 
 
-const char* parsed_string(const char* format, va_list args) {
+const char* parsed_string(const char* format, va_list args, int *chars_printed) {
     int width = 0; 
     int zero_padding = 0;
     int left_align = 0;
@@ -372,30 +390,30 @@ const char* parsed_string(const char* format, va_list args) {
     if (type == 'd') {
         if (length == 'h') {
             short num = va_arg(args, int);
-            print_formatted_int(num, width, zero_padding, precision, left_align, show_sign, space_sign);
+            print_formatted_int(num, width, zero_padding, precision, left_align, show_sign, space_sign, &chars_printed);
         }
         else if (length == 'l') {
             long num = va_arg(args, long);
-            print_formatted_int(num, width, zero_padding, precision, left_align, show_sign, space_sign);
+            print_formatted_int(num, width, zero_padding, precision, left_align, show_sign, space_sign, &chars_printed);
         }
         else {
             int num = va_arg(args, int);
-            print_formatted_int(num, width, zero_padding, precision, left_align, show_sign, space_sign);
+            print_formatted_int(num, width, zero_padding, precision, left_align, show_sign, space_sign, &chars_printed);
         }
     }
     
     else if (type == 'x'){
         if (length == 'h') {
             short num = va_arg(args, int);
-            print_formatted_hex(num, width, zero_padding, precision, left_align, hashtag);
+            print_formatted_hex(num, width, zero_padding, precision, left_align, hashtag, &chars_printed);
         }
         else if (length == 'l') {
             long num = va_arg(args, long);
-            print_formatted_hex(num, width, zero_padding, precision, left_align, hashtag);
+            print_formatted_hex(num, width, zero_padding, precision, left_align, hashtag, &chars_printed);
         }
         else {
             int num = va_arg(args, int);
-            print_formatted_hex(num, width, zero_padding, precision, left_align, hashtag);
+            print_formatted_hex(num, width, zero_padding, precision, left_align, hashtag, &chars_printed);
         }
     }
 
@@ -404,12 +422,14 @@ const char* parsed_string(const char* format, va_list args) {
         zero_padding = 0;
         if (left_align != 1) {
             // width of 1 for 1 char
-            pad_output(1, width, zero_padding);
+            pad_output(1, width, zero_padding, &chars_printed);
             putchar(va_arg(args, char));
+            (*chars_printed)++;
         }
         else {
             putchar(va_arg(args, char));
-            pad_output(1, width, zero_padding);
+            (*chars_printed)++;
+            pad_output(1, width, zero_padding, &chars_printed);
         }
     }
 
@@ -420,13 +440,13 @@ const char* parsed_string(const char* format, va_list args) {
         // create a pointer to the string
         const char *str = va_arg(args, char*); 
 
-        print_formatted_str(str, width, precision, left_align, zero_padding);
+        print_formatted_str(str, width, precision, left_align, zero_padding, &chars_printed);
 
 
     }
     // if not a valid type, throw an error
     else {
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     return format;
