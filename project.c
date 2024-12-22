@@ -30,19 +30,16 @@ int width_str(const char* str);
 void pad_output(int totalWidth, int width, int zero_padding, int *chars_printed);
 
 // will use the following function to help parse the string
-const char* parsed_string(const char* format, va_list args, int *chars_printed);
+const char* parsed_string(const char* format, va_list *args, int *chars_printed);
 
 
 int my_printf(const char* format, ...) {
 
     int chars_printed = 0;
     // va_list will have the variable arguments, and copy will as well so we can count and store
-    va_list args, args_copy;
+    va_list args;
     // va_start initializes the va_list of argumets for use, format is last param before the elipses
     va_start(args, format);
-
-    // using a copy to count the number of args so can make a list of args
-    va_copy(args_copy, args); 
   
 
 
@@ -61,7 +58,7 @@ int my_printf(const char* format, ...) {
 
             // if its not, then check what type it is and apply modifiers
             else {
-                format = parsed_string(format, args, &chars_printed);
+                format = parsed_string(format, &args, &chars_printed);
                 if (format == NULL){
                     return -1;
                 }
@@ -298,7 +295,7 @@ void print_formatted_str(const char* str, int width, int precision, int left_ali
             pad_output(numChars, width, zero_padding, chars_printed);
         }
 
-        print_str(str, precision, chars_printed);
+        print_str(str, numChars, chars_printed);
 
         if (left_align == 1){
             pad_output(numChars, width, zero_padding, chars_printed);
@@ -316,7 +313,7 @@ void print_str(const char* str, int numChars, int *chars_printed) {
 
 
 
-const char* parsed_string(const char* format, va_list args, int *chars_printed) {
+const char* parsed_string(const char* format, va_list *args, int *chars_printed) {
     int width = 0; 
     int zero_padding = 0;
     int left_align = 0;
@@ -354,7 +351,7 @@ const char* parsed_string(const char* format, va_list args, int *chars_printed) 
 
     // now move to handling width
     if (*format == '*') {
-        width = va_arg(args, int);
+        width = va_arg(*args, int);
     }
     else {
         while (*format >= '0' && *format <= '9') {
@@ -389,30 +386,30 @@ const char* parsed_string(const char* format, va_list args, int *chars_printed) 
 
     if (type == 'd') {
         if (length == 'h') {
-            short num = va_arg(args, int);
+            short num = va_arg(*args, int);
             print_formatted_int(num, width, zero_padding, precision, left_align, show_sign, space_sign, chars_printed);
         }
         else if (length == 'l') {
-            long num = va_arg(args, long);
+            long num = va_arg(*args, long);
             print_formatted_int(num, width, zero_padding, precision, left_align, show_sign, space_sign, chars_printed);
         }
         else {
-            int num = va_arg(args, int);
+            int num = va_arg(*args, int);
             print_formatted_int(num, width, zero_padding, precision, left_align, show_sign, space_sign, chars_printed);
         }
     }
     
     else if (type == 'x'){
         if (length == 'h') {
-            short num = va_arg(args, int);
+            short num = va_arg(*args, int);
             print_formatted_hex(num, width, zero_padding, precision, left_align, hashtag, chars_printed);
         }
         else if (length == 'l') {
-            long num = va_arg(args, long);
+            long num = va_arg(*args, long);
             print_formatted_hex(num, width, zero_padding, precision, left_align, hashtag, chars_printed);
         }
         else {
-            int num = va_arg(args, int);
+            int num = va_arg(*args, int);
             print_formatted_hex(num, width, zero_padding, precision, left_align, hashtag, chars_printed);
         }
     }
@@ -424,12 +421,12 @@ const char* parsed_string(const char* format, va_list args, int *chars_printed) 
             // width of 1 for 1 char
             pad_output(1, width, zero_padding, chars_printed);
             // Extract the argument as an int and cast it to char
-            putchar((char)va_arg(args, int));
+            putchar((char)va_arg(*args, int));
             (*chars_printed)++;
         }
         else {
             // Extract the argument as an int and cast it to char
-            putchar((char)va_arg(args, int));
+            putchar((char)va_arg(*args, int));
             (*chars_printed)++;
             pad_output(1, width, zero_padding, chars_printed);
         }
@@ -440,7 +437,7 @@ const char* parsed_string(const char* format, va_list args, int *chars_printed) 
         zero_padding = 0;
 
         // create a pointer to the string
-        const char *str = va_arg(args, char*); 
+        const char *str = va_arg(*args, char*); 
 
         print_formatted_str(str, width, precision, left_align, zero_padding, chars_printed);
 
@@ -456,7 +453,51 @@ const char* parsed_string(const char* format, va_list args, int *chars_printed) 
 }
 // write test functions and put in ada
 
+int main() {
+    int chars_printed;
 
+    // Test simple string
+    chars_printed = my_printf("Hello, world!\n");
+    printf("\n[Expected chars printed: 13, Actual: %d]\n", chars_printed);
+
+    // Test integer formatting
+    chars_printed = my_printf("Number: %d\n", 42);
+    printf("[Expected chars printed: 9, Actual: %d]\n", chars_printed);
+
+    // Test integer with width and precision
+    chars_printed = my_printf("Width/Precision: %8.4d\n", 42);
+    printf("[Expected chars printed: 20, Actual: %d]\n", chars_printed);
+
+    // Test integer with flags
+    chars_printed = my_printf("Signed: %+d, Space: % d\n", 42, -42);
+    printf("[Expected chars printed: 20, Actual: %d]\n", chars_printed);
+
+    // Test hexadecimal formatting
+    chars_printed = my_printf("Hex: %#x\n", 255);
+    printf("[Expected chars printed: 10, Actual: %d]\n", chars_printed);
+
+    // Test string formatting
+    chars_printed = my_printf("String: %-10sEnd\n", "test");
+    printf("[Expected chars printed: 18, Actual: %d]\n", chars_printed);
+
+    // Test character formatting
+    chars_printed = my_printf("Character: %c\n", 'A');
+    printf("[Expected chars printed: 12, Actual: %d]\n", chars_printed);
+
+    // Test zero padding
+    chars_printed = my_printf("Zero padding: %05d\n", 42);
+    printf("[Expected chars printed: 18, Actual: %d]\n", chars_printed);
+
+    // Test mixed formatting
+    chars_printed = my_printf("Mixed: %d, %x, %s, %c\n", 123, 0x1A3F, "hello", 'B');
+    printf("[Expected chars printed: 25, Actual: %d]\n", chars_printed);
+
+    // Test invalid type
+    chars_printed = my_printf("Invalid type: %q\n", 42);
+    printf("[Expected chars printed: -1 (error), Actual: %d]\n", chars_printed);
+
+    return 0;
+}
 
 
 
