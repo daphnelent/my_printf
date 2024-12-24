@@ -32,6 +32,54 @@ void pad_output(int totalWidth, int width, int zero_padding, int *chars_printed)
 // will use the following function to help parse the string
 const char* parsed_string(const char* format, va_list *args, int *chars_printed);
 
+int my_printf(const char* format, ...);
+
+
+int main() {
+    int chars_printed;
+
+    // Test simple string
+    chars_printed = my_printf("Hello, world!\n");
+    printf("\n[Expected chars printed: 13, Actual: %d]\n", chars_printed);
+
+    // Test integer formatting
+    chars_printed = my_printf("Number: %d\n", 42);
+    printf("[Expected chars printed: 9, Actual: %d]\n", chars_printed);
+
+    // Test integer with width and precision
+    chars_printed = my_printf("Width/Precision: %8.4d\n", 42);
+    printf("[Expected chars printed: 20, Actual: %d]\n", chars_printed);
+
+    // Test integer with flags
+    chars_printed = my_printf("Signed: %+d, Space: % d\n", 42, -42);
+    printf("[Expected chars printed: 20, Actual: %d]\n", chars_printed);
+
+    // Test hexadecimal formatting
+    chars_printed = my_printf("Hex: %#x\n", 255);
+    printf("[Expected chars printed: 10, Actual: %d]\n", chars_printed);
+
+    // Test string formatting
+    chars_printed = my_printf("String: %-10sEnd\n", "test");
+    printf("[Expected chars printed: 18, Actual: %d]\n", chars_printed);
+
+    // Test character formatting
+    chars_printed = my_printf("Character: %c\n", 'A');
+    printf("[Expected chars printed: 12, Actual: %d]\n", chars_printed);
+
+    // Test zero padding
+    chars_printed = my_printf("Zero padding: %05d\n", 42);
+    printf("[Expected chars printed: 18, Actual: %d]\n", chars_printed);
+
+    // Test mixed formatting
+    chars_printed = my_printf("Mixed: %d, %x, %s, %c\n", 123, 0x1A3F, "hello", 'B');
+    printf("[Expected chars printed: 25, Actual: %d]\n", chars_printed);
+
+    // Test invalid type
+    chars_printed = my_printf("Invalid type: %q\n", 42);
+    printf("[Expected chars printed: -1 (error), Actual: %d]\n", chars_printed);
+
+    return 0;
+}
 
 int my_printf(const char* format, ...) {
 
@@ -453,51 +501,6 @@ const char* parsed_string(const char* format, va_list *args, int *chars_printed)
 }
 // write test functions and put in ada
 
-int main() {
-    int chars_printed;
-
-    // Test simple string
-    chars_printed = my_printf("Hello, world!\n");
-    printf("\n[Expected chars printed: 13, Actual: %d]\n", chars_printed);
-
-    // Test integer formatting
-    chars_printed = my_printf("Number: %d\n", 42);
-    printf("[Expected chars printed: 9, Actual: %d]\n", chars_printed);
-
-    // Test integer with width and precision
-    chars_printed = my_printf("Width/Precision: %8.4d\n", 42);
-    printf("[Expected chars printed: 20, Actual: %d]\n", chars_printed);
-
-    // Test integer with flags
-    chars_printed = my_printf("Signed: %+d, Space: % d\n", 42, -42);
-    printf("[Expected chars printed: 20, Actual: %d]\n", chars_printed);
-
-    // Test hexadecimal formatting
-    chars_printed = my_printf("Hex: %#x\n", 255);
-    printf("[Expected chars printed: 10, Actual: %d]\n", chars_printed);
-
-    // Test string formatting
-    chars_printed = my_printf("String: %-10sEnd\n", "test");
-    printf("[Expected chars printed: 18, Actual: %d]\n", chars_printed);
-
-    // Test character formatting
-    chars_printed = my_printf("Character: %c\n", 'A');
-    printf("[Expected chars printed: 12, Actual: %d]\n", chars_printed);
-
-    // Test zero padding
-    chars_printed = my_printf("Zero padding: %05d\n", 42);
-    printf("[Expected chars printed: 18, Actual: %d]\n", chars_printed);
-
-    // Test mixed formatting
-    chars_printed = my_printf("Mixed: %d, %x, %s, %c\n", 123, 0x1A3F, "hello", 'B');
-    printf("[Expected chars printed: 25, Actual: %d]\n", chars_printed);
-
-    // Test invalid type
-    chars_printed = my_printf("Invalid type: %q\n", 42);
-    printf("[Expected chars printed: -1 (error), Actual: %d]\n", chars_printed);
-
-    return 0;
-}
 
 
 
